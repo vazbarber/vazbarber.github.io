@@ -96,9 +96,19 @@ O plano gratuito pausa projetos após **7 dias sem atividade**. Os lembretes de 
 
 ---
 
+## Horário (definido na agenda)
+
+O horário não é fixo: na agenda, secção **Horário**, a dona toca em cada dia para escolher **fechado**, **dia todo**, **só manhã** ou **só tarde**. Fica guardado logo.
+
+- Dias sem nada definido ficam fechados para os clientes. A ideia é definir o mês seguinte durante o mês atual (em outubro define-se novembro, e assim por diante).
+- A partir do dia 15, a agenda mostra um aviso se o mês seguinte ainda estiver vazio. A partir do dia 20, segue também um email (uma vez por mês).
+- As horas de cada turno (manhã e tarde) mudam-se na mesma secção, em **Horas dos turnos**.
+- Para fechar só parte de um turno (ex.: uma consulta), usa **Bloquear horas específicas**.
+- Projetos novos: depois do `schema.sql`, corre também `supabase/disponibilidade.sql`.
+
 ## Afinar
 
-- **Serviços, preços, durações, horário** (com vários serviços, o site mostra automaticamente o passo de escolha): Supabase → Table Editor → `services` / `business_hours` (pode haver duas linhas no mesmo dia para a pausa de almoço; `weekday` 1 = segunda … 7 = domingo).
+- **Serviços, preços e durações** (com vários serviços, o site mostra automaticamente o passo de escolha): Supabase → Table Editor → `services` / `business_hours` (pode haver duas linhas no mesmo dia para a pausa de almoço; `weekday` 1 = segunda … 7 = domingo).
 - **Horas propostas**: seguem a duração do serviço (45 min → 10:00, 10:45, 14:00, 14:45). Mudando a duração, as horas ajustam-se sozinhas.
 - **Antecedência mínima e dias para a frente**: no início da função `available_slots` em `schema.sql` (volta a correr só essa função no SQL Editor).
 - **Cores**: variáveis no topo de `assets/style.css` (tiradas do logo).
