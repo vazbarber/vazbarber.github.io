@@ -2,9 +2,9 @@
 (function () {
   const A = window.App;
   const $ = (s) => document.querySelector(s);
-  const WEEKDAYS = ["", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"];
 
-  const state = { services: [], hours: [], service: null, day: null, slot: null };
+  const state = { services: [], periods: [], open: new Map(), service: null, day: null, slot: null };
+  const MAX_DAYS = 75;                              // igual ao limite na base de dados
 
   A.bindConfig();
   if (A.DEMO) $("#demo-banner").hidden = false;
@@ -18,12 +18,32 @@
     if (error) throw error;
     return data;
   }
-  async function loadHours() {
-    if (A.DEMO) return A.demo.hours;
-    const { data, error } = await A.sb.from("business_hours")
-      .select("weekday,open_time,close_time").order("weekday").order("open_time");
+  async function loadPeriods() {
+    if (A.DEMO) return A.demo.periods;
+    const { data, error } = await A.sb.from("periods").select("key,label,start_time,end_time").order("start_time");
     if (error) throw error;
     return data;
+  }
+  /** Dias abertos (definidos pela dona no calendário da agenda). */
+  async function loadOpenDays() {
+    const from = A.todayKey(), to = A.addDays(from, MAX_DAYS);
+    let rows;
+    if (A.DEMO) {
+      rows = [];
+      for (let i = 0; i < 40; i++) {
+        const day = A.addDays(from, i);
+        if (i % 7 === 3) continue;                              // finge folgas
+        if (i % 5 !== 2) rows.push({ day, period: "manha" });
+        if (i % 4 !== 1) rows.push({ day, period: "tarde" });
+      }
+    } else {
+      const { data, error } = await A.sb.from("availability").select("day,period").gte("day", from).lte("day", to);
+      if (error) throw error;
+      rows = data;
+    }
+    const map = new Map();
+    rows.forEach((r) => (map.get(r.day) || map.set(r.day, []).get(r.day)).push(r.period));
+    return map;
   }
   async function loadSlots(day, serviceId) {
     if (A.DEMO) return demoSlots(day);
@@ -35,36 +55,23 @@
     const dur = state.service.duration_minutes;
     const out = [];
     const minStart = Date.now() + 2 * 3600e3;
-    state.hours.filter((h) => h.weekday === A.isoWeekday(day)).forEach((h) => {
-      const toMin = (t) => +t.slice(0, 2) * 60 + +t.slice(3, 5);
-      for (let m = toMin(h.open_time); m + dur <= toMin(h.close_time); m += dur) {
+    const toMin = (t) => +t.slice(0, 2) * 60 + +t.slice(3, 5);
+    state.periods.filter((p) => (state.open.get(day) || []).includes(p.key)).forEach((p) => {
+      for (let m = toMin(p.start_time); m + dur <= toMin(p.end_time); m += dur) {
         const hhmm = String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0");
         const inst = A.lisbonInstant(day, hhmm);
-        // finge que algumas horas já estão ocupadas
-        const busy = (m * 7 + Number(day.slice(-2)) * 13) % 5 === 0;
+        const busy = (m * 7 + Number(day.slice(-2)) * 13) % 5 === 0;   // finge horas ocupadas
         if (inst.getTime() >= minStart && !busy) out.push(inst.toISOString());
       }
     });
     return new Promise((r) => setTimeout(() => r(out), 250));
   }
 
-  // ------------------------------------------------------------ horário (painel lateral)
+  // ------------------------------------------------------------ horário (rodapé)
   function renderHours() {
-    const byDay = {};
-    state.hours.forEach((h) => (byDay[h.weekday] ||= []).push(h.open_time.slice(0, 5) + "–" + h.close_time.slice(0, 5)));
-    // agrupa dias seguidos com o mesmo horário: "Terça a sexta"
-    const rows = [];
-    for (let d = 1; d <= 7; d++) {
-      const txt = byDay[d] ? byDay[d].join(", ") : "Fechado";
-      const last = rows[rows.length - 1];
-      if (last && last.txt === txt && last.to === d - 1) last.to = d;
-      else rows.push({ from: d, to: d, txt });
-    }
-    $("#hours").innerHTML = rows.map((r) => {
-      const label = r.from === r.to ? WEEKDAYS[r.from]
-        : WEEKDAYS[r.from] + (r.to - r.from > 1 ? " a " : " e ") + WEEKDAYS[r.to].toLowerCase();
-      return `<li${r.txt === "Fechado" ? ' class="closed"' : ""}><span>${label}</span><span>${A.esc(r.txt)}</span></li>`;
-    }).join("");
+    $("#hours").innerHTML = state.periods.map((p) =>
+      `<li><span>${A.esc(p.label)}</span><span>${p.start_time.slice(0, 5)}–${p.end_time.slice(0, 5)}</span></li>`).join("") +
+      `<li><span>Dias</span><span>Os dias abertos aparecem acima</span></li>`;
   }
 
   // ------------------------------------------------------------ passo 1: serviço
@@ -106,25 +113,33 @@
 
   // ------------------------------------------------------------ passo 2: dia
   function renderDays() {
-    const openDays = new Set(state.hours.map((h) => h.weekday));
     const today = A.todayKey();
+    const openKeys = [...state.open.keys()].sort();
+    if (!openKeys.length) {
+      $("#days").innerHTML = `<li class="muted no-days">De momento não há dias disponíveis. Volta a espreitar em breve.</li>`;
+      return;
+    }
+    // mostra de hoje até ao último dia aberto (pelo menos 2 semanas)
+    const end = openKeys[openKeys.length - 1] > A.addDays(today, 13) ? openKeys[openKeys.length - 1] : A.addDays(today, 13);
     const days = [];
-    for (let i = 0; i < Math.min(A.C.DAYS_AHEAD || 28, 60); i++) days.push(A.addDays(today, i));
+    for (let k = today; k <= end && days.length <= MAX_DAYS; k = A.addDays(k, 1)) days.push(k);
 
     let lastMonth = "";
     $("#days").innerHTML = days.map((key) => {
       const d = A.keyToDate(key);
-      const open = openDays.has(A.isoWeekday(key));
+      const ps = state.open.get(key) || [];
+      const open = ps.length > 0;
       const wd = new Intl.DateTimeFormat("pt-PT", { weekday: "short", timeZone: "UTC" }).format(d).replace(".", "");
       const month = new Intl.DateTimeFormat("pt-PT", { month: "short", timeZone: "UTC" }).format(d).replace(".", "");
       const showMonth = month !== lastMonth; lastMonth = month;
       const full = new Intl.DateTimeFormat("pt-PT", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }).format(d);
+      const part = ps.length === 1 ? (ps[0] === "manha" ? "manhã" : "tarde") : "";
       return `<li>
-        <label class="day${open ? "" : " day-closed"}" title="${open ? full : full + " — fechado"}">
-          <input type="radio" name="day" value="${key}" ${open ? "" : "disabled"} ${state.day === key ? "checked" : ""} aria-label="${full}${open ? "" : ", fechado"}">
+        <label class="day${open ? "" : " day-closed"}" title="${open ? full : full + ": fechado"}">
+          <input type="radio" name="day" value="${key}" ${open ? "" : "disabled"} ${state.day === key ? "checked" : ""} aria-label="${full}${open ? (part ? ", só " + part : "") : ", fechado"}">
           <span class="day-wd">${key === today ? "hoje" : wd}</span>
           <span class="day-n">${d.getUTCDate()}</span>
-          <span class="day-m">${showMonth ? month : "&nbsp;"}</span>
+          <span class="day-m">${part || (showMonth ? month : "&nbsp;")}</span>
         </label></li>`;
     }).join("");
   }
@@ -275,7 +290,7 @@
   // ------------------------------------------------------------ arranque
   (async function init() {
     try {
-      [state.services, state.hours] = await Promise.all([loadServices(), loadHours()]);
+      [state.services, state.periods, state.open] = await Promise.all([loadServices(), loadPeriods(), loadOpenDays()]);
       renderServices();
       renderHours();
     } catch (err) {

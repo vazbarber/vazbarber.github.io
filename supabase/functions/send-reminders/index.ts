@@ -41,5 +41,42 @@ Deno.serve(async (req) => {
     }
   }
 
-  return json({ ok: true, sent, skipped, failed });
+  const schedule = await remindToSetSchedule(db).catch((e) => {
+    console.error("Aviso de horário falhou:", e);
+    return "erro";
+  });
+
+  return json({ ok: true, sent, skipped, failed, schedule });
 });
+
+/**
+ * A partir do dia 20 (depois das 9h em Lisboa), se o mês seguinte ainda não
+ * tiver nenhum dia aberto, envia um email à dona — uma vez por mês.
+ */
+async function remindToSetSchedule(db: ReturnType<typeof adminDb>) {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Europe/Lisbon", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", hourCycle: "h23",
+    }).formatToParts(new Date()).map((p) => [p.type, p.value]),
+  );
+  if (Number(parts.day) < 20 || Number(parts.hour) < 9 || !cfg.ownerEmail) return "fora de prazo";
+
+  const y = Number(parts.year), m = Number(parts.month);           // mês atual (1-12)
+  const ny = m === 12 ? y + 1 : y, nm = m === 12 ? 1 : m + 1;      // mês seguinte
+  const monthKey = `${ny}-${String(nm).padStart(2, "0")}`;
+  const first = `${monthKey}-01`;
+  const last = new Date(Date.UTC(ny, nm, 0)).toISOString().slice(0, 10);
+
+  const { data: done } = await db.from("app_settings").select("value").eq("key", "schedule_reminder_sent").maybeSingle();
+  if (done?.value === monthKey) return "já enviado";
+
+  const { count } = await db.from("availability").select("day", { count: "exact", head: true })
+    .gte("day", first).lte("day", last);
+  if ((count ?? 0) > 0) return "mês já definido";
+
+  const monthName = new Intl.DateTimeFormat("pt-PT", { month: "long", timeZone: "UTC" })
+    .format(new Date(Date.UTC(ny, nm - 1, 15)));
+  await sendEmail({ to: cfg.ownerEmail, ...emails.scheduleReminder(monthName) });
+  await db.from("app_settings").upsert({ key: "schedule_reminder_sent", value: monthKey });
+  return "enviado";
+}

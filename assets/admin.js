@@ -65,6 +65,7 @@
     show("#logout");
     show("#agenda");
     await refresh();
+    window.Schedule && window.Schedule.init();
   }
 
   // ------------------------------------------------------------ dados
@@ -84,11 +85,13 @@
   }
 
   let busy = false;
+  let lastData = null;
   async function refresh() {
     if (busy) return;
     busy = true;
     try {
       const d = await fetchAll();
+      lastData = d;
       render(d);
     } catch (err) {
       console.error(err);
@@ -307,6 +310,13 @@
       timeOff: [{ id: 1, ...(() => { const s = A.lisbonInstant(A.addDays(today, 14), "00:00"); return { starts_at: s.toISOString(), ends_at: new Date(s.getTime() + 86400e3).toISOString() }; })(), reason: "Feriado" }],
     };
   }
+
+  // Partilhado com o calendário de horário (schedule.js)
+  window.Agenda = {
+    toast: (m, e) => toast(m, e),
+    activeBookings: () => (lastData ? lastData.active : []),
+    refresh: () => refresh(),
+  };
 
   start();
 })();

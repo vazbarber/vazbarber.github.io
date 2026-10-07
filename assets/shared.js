@@ -90,8 +90,10 @@
     services: [
       { id: 1, name: "Corte de cabelo", description: null, duration_minutes: 45, price_eur: 10 },
     ],
-    hours: [1, 2, 3, 4, 5, 6, 7].flatMap((d) => [[d, "10:00", "12:00"], [d, "14:00", "16:00"]])
-      .map(([weekday, open_time, close_time]) => ({ weekday, open_time, close_time })),
+    periods: [
+      { key: "manha", label: "Manhã", start_time: "10:00:00", end_time: "12:00:00" },
+      { key: "tarde", label: "Tarde", start_time: "14:00:00", end_time: "16:00:00" },
+    ],
   };
 
   window.App = {

@@ -46,6 +46,11 @@
 
     <!-- Agenda -->
     <div id="agenda" hidden>
+      <div class="sched-banner" id="schedule-banner" hidden>
+        <p id="schedule-banner-text"></p>
+        <button type="button" class="btn-primary" id="schedule-banner-btn">Definir agora</button>
+      </div>
+
       <section class="admin-section">
         <h2>Por aprovar <span class="count" id="n-pending"></span></h2>
         <div id="pending"></div>
@@ -56,17 +61,50 @@
         <div id="upcoming"></div>
       </section>
 
-      <section class="admin-section">
-        <h2>Folgas e horas bloqueadas</h2>
-        <form class="timeoff-form" id="timeoff-form">
-          <label class="field"><span>De (dia)</span><input type="date" name="from_day" required></label>
-          <label class="field"><span>Hora <em>(vazio = dia todo)</em></span><input type="time" name="from_time"></label>
-          <label class="field"><span>Até (dia)</span><input type="date" name="to_day" required></label>
-          <label class="field"><span>Hora <em>(vazio = dia todo)</em></span><input type="time" name="to_time"></label>
-          <label class="field"><span>Motivo <em>(só tu vês)</em></span><input name="reason" maxlength="100" placeholder="Férias"></label>
-          <button class="btn-primary" type="submit">Bloquear</button>
-        </form>
-        <ul class="timeoff-list" id="timeoff"></ul>
+      <section class="admin-section" id="horario">
+        <h2>Horário</h2>
+        <p class="sched-help">Toca num dia para mudar entre <b>fechado</b>, <b>dia todo</b>, <b>só manhã</b> e <b>só tarde</b>. Fica guardado logo. Dias sem nada ficam fechados para os clientes.</p>
+
+        <div class="cal">
+          <div class="cal-head">
+            <button type="button" class="cal-nav" id="cal-prev" aria-label="Mês anterior">‹</button>
+            <h3 id="cal-title"></h3>
+            <button type="button" class="cal-nav" id="cal-next" aria-label="Mês seguinte">›</button>
+          </div>
+          <div class="cal-grid cal-wd" aria-hidden="true"><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span><span>D</span></div>
+          <div class="cal-grid" id="cal-days"></div>
+          <ul class="cal-legend" aria-hidden="true">
+            <li><span class="sw st-both"></span>Dia todo</li>
+            <li><span class="sw st-manha"></span>Só manhã</li>
+            <li><span class="sw st-tarde"></span>Só tarde</li>
+            <li><span class="sw st-none"></span>Fechado</li>
+            <li><span class="cal-dot"></span>Tem marcações</li>
+          </ul>
+          <p class="cal-summary" id="cal-summary"></p>
+          <div class="cal-actions">
+            <button type="button" class="btn-ghost" id="cal-all">Abrir o mês todo</button>
+            <button type="button" class="btn-ghost" id="cal-none">Fechar o mês todo</button>
+          </div>
+        </div>
+
+        <details class="sub-details">
+          <summary>Horas dos turnos <span class="muted" id="periods-desc"></span></summary>
+          <form class="periods-form" id="periods-form"></form>
+        </details>
+
+        <details class="sub-details">
+          <summary>Bloquear horas específicas</summary>
+          <p class="sched-help">Para fechar só uma parte de um turno (ex.: uma consulta das 10:00 às 11:00).</p>
+          <form class="timeoff-form" id="timeoff-form">
+            <label class="field"><span>De (dia)</span><input type="date" name="from_day" required></label>
+            <label class="field"><span>Hora <em>(vazio = dia todo)</em></span><input type="time" name="from_time"></label>
+            <label class="field"><span>Até (dia)</span><input type="date" name="to_day" required></label>
+            <label class="field"><span>Hora <em>(vazio = dia todo)</em></span><input type="time" name="to_time"></label>
+            <label class="field"><span>Motivo <em>(só tu vês)</em></span><input name="reason" maxlength="100"></label>
+            <button class="btn-primary" type="submit">Bloquear</button>
+          </form>
+          <ul class="timeoff-list" id="timeoff"></ul>
+        </details>
       </section>
 
       <section class="admin-section">
@@ -83,6 +121,7 @@
   <script src="config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="assets/shared.js"></script>
+  <script src="assets/schedule.js"></script>
   <script src="assets/admin.js"></script>
 </body>
 </html>

@@ -350,3 +350,77 @@ details.history > summary { cursor: pointer; font-weight: 500; color: var(--ink)
   .bk-actions button { flex: 1; padding: 11px; }
   .bk-note { grid-column: 1 / -1; }
 }
+
+/* ---- Horário (calendário) */
+.sched-banner {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  margin: 0 0 28px; padding: 14px 16px;
+  border: 1px solid var(--red); border-left-width: 4px; border-radius: var(--radius);
+}
+.sched-banner p { margin: 0; font-weight: 500; color: var(--ink); }
+.sched-banner .btn-primary { width: auto; margin: 0; padding: 9px 16px; font-size: .95rem; }
+.sched-help { margin: 0 0 14px; color: var(--muted); font-size: .92rem; max-width: 60ch; }
+.sched-help b { color: var(--ink); font-weight: 500; }
+
+.cal { max-width: 460px; }
+.cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.cal-head h3 { margin: 0; font-size: 1.1rem; font-weight: 600; color: var(--ink); }
+.cal-head h3::first-letter { text-transform: uppercase; }
+.cal-nav {
+  width: 38px; height: 38px;
+  border: 1px solid var(--line); border-radius: 50%;
+  background: var(--bg); cursor: pointer;
+  font-size: 1.3rem; line-height: 1;
+}
+.cal-nav:hover:not(:disabled) { border-color: var(--ink); }
+.cal-nav:disabled { opacity: .3; cursor: default; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal-wd { margin-bottom: 4px; }
+.cal-wd span { text-align: center; font-size: .75rem; color: var(--muted); }
+.cal-day {
+  position: relative;
+  display: grid; align-content: center; justify-items: center;
+  aspect-ratio: 1 / 1.05;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg);
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.cal-n { font-size: 1rem; font-weight: 600; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.cal-st { font-size: .62rem; line-height: 1.2; min-height: 1.2em; }
+.cal-day:hover:not(:disabled) { border-color: var(--ink); }
+.cal-day.st-both { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.cal-day.st-manha, .cal-day.st-tarde { background: var(--soft); border-color: #bdbdbd; color: var(--ink); }
+.cal-day.st-manha { background: linear-gradient(var(--ink) 0 22%, var(--soft) 22%); }
+.cal-day.st-tarde { background: linear-gradient(var(--soft) 78%, var(--ink) 78%); }
+.cal-day.st-none .cal-n { color: var(--muted); font-weight: 400; }
+.cal-day.is-past { opacity: .35; cursor: default; }
+.cal-day.is-today { outline: 2px solid var(--red); outline-offset: 1px; }
+.cal-dot {
+  position: absolute; top: 4px; right: 4px;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--red);
+}
+.cal-legend .cal-dot { position: static; display: inline-block; margin-right: 6px; }
+.cal-legend { list-style: none; padding: 0; margin: 12px 0 0; display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .8rem; color: var(--muted); }
+.cal-legend li { display: flex; align-items: center; }
+.cal-legend .sw { width: 14px; height: 14px; border-radius: 3px; border: 1px solid #bdbdbd; margin-right: 6px; }
+.cal-legend .sw.st-both { background: var(--ink); border-color: var(--ink); }
+.cal-legend .sw.st-manha { background: linear-gradient(var(--ink) 0 35%, var(--soft) 35%); }
+.cal-legend .sw.st-tarde { background: linear-gradient(var(--soft) 65%, var(--ink) 65%); }
+.cal-legend .sw.st-none { background: var(--bg); }
+.cal-summary { margin: 12px 0 0; font-size: .92rem; }
+.cal-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.cal-actions .btn-ghost { padding: 8px 14px; font-size: .9rem; }
+
+.sub-details { margin-top: 20px; border-top: 1px solid var(--line); padding-top: 14px; }
+.sub-details > summary { cursor: pointer; font-weight: 500; color: var(--ink); }
+.sub-details > summary .muted { font-weight: 400; font-size: .88rem; margin-left: 6px; }
+.sub-details[open] > summary { margin-bottom: 12px; }
+.periods-form { display: grid; gap: 12px; max-width: 460px; }
+.period-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; border: 0; padding: 0; margin: 0; }
+.period-row legend { font-weight: 600; color: var(--ink); margin-bottom: 4px; padding: 0; }
+.periods-form .btn-primary { margin-top: 0; }

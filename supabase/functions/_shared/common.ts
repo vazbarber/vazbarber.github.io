@@ -293,6 +293,14 @@ export const emails = {
       (cfg.siteUrl ? button(cfg.siteUrl, "Fazer nova marcação") : "")),
   }),
 
+  scheduleReminder: (monthName: string) => ({
+    subject: `Falta definir o horário de ${monthName}`,
+    html: layout(`Horário de ${monthName}`,
+      p(`Ainda não há nenhum dia aberto em <b>${esc(monthName)}</b>, por isso os clientes ainda não conseguem marcar para esse mês.`) +
+      p("Abre a agenda e escolhe, dia a dia, se trabalhas de manhã, à tarde ou o dia todo.") +
+      (cfg.siteUrl ? button(`${cfg.siteUrl}/admin.html#horario`, "Definir horário") : "")),
+  }),
+
   reminder: (b: Booking) => ({
     subject: `Lembrete: ${b.services?.name ?? "marcação"} — ${fmtDate(new Date(b.starts_at))} às ${fmtTime(new Date(b.starts_at))}`,
     html: layout("Lembrete da tua marcação",
