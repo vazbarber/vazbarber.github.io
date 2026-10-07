@@ -2,7 +2,7 @@
 // guarda como "pending" e envia emails ao cliente e à dona do negócio.
 
 import {
-  adminDb, cfg, corsHeaders, emails, json, lisbonDay, loadBooking, sendEmail,
+  adminDb, initConfig, cfg, corsHeaders, emails, json, lisbonDay, loadBooking, sendEmail,
 } from "../_shared/common.ts";
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
@@ -10,6 +10,7 @@ const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Método não permitido" }, 405);
+  await initConfig();
 
   let body: Record<string, unknown>;
   try {

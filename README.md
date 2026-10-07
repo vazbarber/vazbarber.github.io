@@ -42,7 +42,7 @@ Tudo em planos gratuitos: **GitHub Pages** (site), **Supabase** (base de dados, 
 
 1. Cria conta em [supabase.com](https://supabase.com) e um **New project** (região: *West EU (Ireland)* ou *Central EU (Frankfurt)*).
 2. Abre **SQL Editor → New query**, cola todo o `supabase/schema.sql` e **antes de correr**:
-   - na última linha, troca `email-da-tua-irma@exemplo.com` pelo email dela;
+   - troca os valores marcados com ⚠️ (email de login e, no fim, a configuração privada: morada, emails e endereço do site);
    - já vem com **Corte de cabelo, 45 min, 10 €** e o horário **todos os dias, 10h–12h e 14h–16h**. Tudo isto se muda depois em **Table Editor** (ver *Afinar*).
 3. Carrega em **Run**.
 4. **Authentication → Users → Add user → Create new user**: o email dela e uma palavra-passe. Marca *Auto Confirm User*.
@@ -63,26 +63,18 @@ Precisas de [Node.js](https://nodejs.org) instalado. Num terminal, dentro da pas
 ```bash
 npx supabase login
 npx supabase link --project-ref O-TEU-PROJETO     # o ID que aparece no URL do projeto
-
-npx supabase secrets set \
-  BREVO_API_KEY="xkeysib-..." \
-  SENDER_EMAIL="o-email-confirmado-no-brevo@exemplo.com" \
-  OWNER_EMAIL="email-da-tua-irma@exemplo.com" \
-  BUSINESS_NAME="Vaz Barber" \
-  BUSINESS_ADDRESS="Rua Professor Cid dos Santos, 65, R/C Dto." \
-  SITE_URL="https://O-TEU-UTILIZADOR.github.io/NOME-DO-REPO" \
-  CRON_SECRET="inventa-uma-frase-longa-e-aleatoria"
-
 npx supabase functions deploy book --no-verify-jwt
 npx supabase functions deploy manage-booking --no-verify-jwt
 npx supabase functions deploy send-reminders --no-verify-jwt
 ```
 
+Depois, em **Edge Functions → Secrets**, cria o secret `BREVO_API_KEY` com a chave do Brevo. Os restantes dados (morada, emails, endereço do site) ficam na tabela privada `app_settings` (preenchida no passo 1), por isso **nada pessoal fica no código, que é público no GitHub**.
+
 (As funções verificam elas próprias quem as chama; o `--no-verify-jwt` só evita uma verificação duplicada.)
 
 ### 4. Lembretes automáticos
 
-No **SQL Editor**, cola `supabase/cron.sql`, troca `O-TEU-PROJETO` e `O-TEU-SEGREDO` (o mesmo `CRON_SECRET` do passo 3) e carrega em **Run**.
+No **SQL Editor**, cola `supabase/cron.sql`, troca `O-TEU-PROJETO` e carrega em **Run**. O segredo do agendador é gerado sozinho no passo 1.
 
 ### 5. Site no GitHub Pages
 

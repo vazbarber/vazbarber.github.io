@@ -1,11 +1,12 @@
 // Chamado de hora a hora pelo agendador (ver supabase/cron.sql).
 // Envia o lembrete por email ~24h antes de cada marcação confirmada.
 
-import { adminDb, cfg, emails, json, sendEmail, type Booking } from "../_shared/common.ts";
+import { adminDb, cfg, emails, initConfig, json, sendEmail, type Booking } from "../_shared/common.ts";
 
 const HOUR = 3_600_000;
 
 Deno.serve(async (req) => {
+  await initConfig();
   if (!cfg.cronSecret || req.headers.get("x-cron-secret") !== cfg.cronSecret)
     return json({ error: "Não autorizado" }, 401);
 

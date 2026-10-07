@@ -5,12 +5,12 @@
 // =====================================================================
 window.APP_CONFIG = {
   // Supabase → Project Settings → API
-  SUPABASE_URL: "",        // ex.: "https://abcdefgh.supabase.co"
-  SUPABASE_ANON_KEY: "",   // a chave "anon" / "publishable" (é pública, pode ficar aqui)
+  SUPABASE_URL: "https://bsmncvqjenqjqwspxbzs.supabase.co",
+  SUPABASE_ANON_KEY: "sb_publishable_II437F3wEhe1kv9xISdWXg_tG6ptL7y", // chave pública (pode ficar aqui)
 
   BUSINESS_NAME: "Vaz Barber",
   // Zona mostrada no site. A morada exata NÃO aparece no site:
-  // só vai no email de confirmação (secret BUSINESS_ADDRESS no Supabase).
+  // só vai no email de confirmação (tabela privada app_settings no Supabase).
   AREA: "Lisboa",
   PHONE: "",               // vazio = não aparece no site
   INSTAGRAM: "_vaz_barber", // sem @; vazio = não aparece

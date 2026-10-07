@@ -3,7 +3,7 @@
 --  Copiar tudo isto para: Supabase → SQL Editor → New query → Run
 -- =====================================================================
 
-create extension if not exists btree_gist;
+create extension if not exists btree_gist with schema extensions;
 
 -- ---------------------------------------------------------------------
 -- Serviços (corte, barba, etc.)
@@ -183,6 +183,11 @@ grant usage on all sequences in schema public to authenticated;
 grant execute on function public.available_slots(date, int) to anon, authenticated;
 grant execute on function public.is_admin() to anon, authenticated;
 
+-- Conta de servidor usada pelas funções de email
+grant all on all tables in schema public to service_role;
+grant all on all sequences in schema public to service_role;
+grant execute on all functions in schema public to service_role;
+
 -- =====================================================================
 --  DADOS INICIAIS — ajustar à vontade (também se pode editar depois em
 --  Supabase → Table Editor)
@@ -198,6 +203,28 @@ from generate_series(1, 7) as d,
      (values (time '10:00', time '12:00'), (time '14:00', time '16:00')) as t(open_time, close_time)
 where not exists (select 1 from public.business_hours);
 
--- ⚠️ TROCAR pelo email com que a tua irmã vai entrar na página de gestão
-insert into public.admins (email) values ('email-da-tua-irma@exemplo.com')
+-- ⚠️ TROCAR pelo email de quem entra na agenda (pode haver mais do que um)
+insert into public.admins (email) values ('o-teu-email@exemplo.com')
 on conflict do nothing;
+
+-- =====================================================================
+--  CONFIGURAÇÃO PRIVADA (só o servidor lê; nunca aparece no site)
+--  ⚠️ Preencher os valores antes de correr.
+-- =====================================================================
+create table if not exists public.app_settings (
+  key   text primary key,
+  value text
+);
+alter table public.app_settings enable row level security;
+revoke all on public.app_settings from anon, authenticated;
+grant all on public.app_settings to service_role;
+
+insert into public.app_settings (key, value) values
+  ('business_name',    'Vaz Barber'),
+  ('business_address', 'MORADA COMPLETA (só vai no email de confirmação)'),
+  ('owner_email',      'email-que-recebe-os-pedidos@exemplo.com'),
+  ('sender_email',     'email-confirmado-no-brevo@exemplo.com'),
+  ('site_url',         'https://O-TEU-UTILIZADOR.github.io/vaz-barber'),
+  ('cron_secret',      replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', ''))
+on conflict (key) do nothing;
+-- A chave do Brevo NÃO vai aqui: fica em Edge Functions → Secrets → BREVO_API_KEY

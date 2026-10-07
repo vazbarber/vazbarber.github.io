@@ -2,7 +2,7 @@
 // Só funciona para quem tem login E está na tabela "admins".
 
 import {
-  adminDb, buildIcs, corsHeaders, emails, json, loadBooking, sendEmail,
+  adminDb, initConfig, buildIcs, corsHeaders, emails, json, loadBooking, sendEmail,
 } from "../_shared/common.ts";
 
 const TRANSITIONS: Record<string, { from: string[]; to: string }> = {
@@ -14,6 +14,7 @@ const TRANSITIONS: Record<string, { from: string[]; to: string }> = {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Método não permitido" }, 405);
+  await initConfig();
 
   const db = adminDb();
 

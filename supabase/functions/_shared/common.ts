@@ -8,16 +8,22 @@ export const TZ = "Europe/Lisbon";
 export const env = (name: string, fallback = ""): string =>
   Deno.env.get(name) ?? fallback;
 
+/**
+ * Configuração. Os dados do negócio (emails, morada, endereço do site...) ficam
+ * na tabela privada public.app_settings, que só o servidor consegue ler — assim
+ * nada pessoal fica no código, que é público no GitHub. Um "secret" das Edge
+ * Functions com o mesmo nome em maiúsculas (ex.: BREVO_API_KEY) tem prioridade.
+ */
 export const cfg = {
-  businessName: env("BUSINESS_NAME", "Vaz Barber"),
-  businessAddress: env("BUSINESS_ADDRESS"),
-  businessPhone: env("BUSINESS_PHONE"),
-  ownerEmail: env("OWNER_EMAIL"),
-  senderEmail: env("SENDER_EMAIL"),
-  senderName: env("SENDER_NAME") || env("BUSINESS_NAME", "Vaz Barber"),
-  siteUrl: env("SITE_URL").replace(/\/+$/, ""),
-  brevoKey: env("BREVO_API_KEY"),
-  cronSecret: env("CRON_SECRET"),
+  businessName: "Vaz Barber",
+  businessAddress: "",
+  businessPhone: "",
+  ownerEmail: "",
+  senderEmail: "",
+  senderName: "",
+  siteUrl: "",
+  brevoKey: "",
+  cronSecret: "",
   allowedOrigin: env("ALLOWED_ORIGIN", "*"),
 };
 
@@ -26,6 +32,28 @@ export const adminDb = () =>
   createClient(env("SUPABASE_URL"), env("SUPABASE_SERVICE_ROLE_KEY"), {
     auth: { persistSession: false },
   });
+
+let loadedAt = 0;
+/** Carrega a configuração (com cache de 1 minuto). Chamar no início de cada pedido. */
+export async function initConfig() {
+  if (Date.now() - loadedAt < 60_000) return;
+  const { data, error } = await adminDb().from("app_settings").select("key, value");
+  if (error) console.error("Não foi possível ler app_settings:", error.message);
+  const s: Record<string, string> = Object.fromEntries(
+    (data ?? []).map((r: { key: string; value: string }) => [r.key, r.value ?? ""]),
+  );
+  const pick = (key: string, fallback = "") => env(key.toUpperCase()) || s[key] || fallback;
+  cfg.businessName = pick("business_name", "Vaz Barber");
+  cfg.businessAddress = pick("business_address");
+  cfg.businessPhone = pick("business_phone");
+  cfg.ownerEmail = pick("owner_email");
+  cfg.senderEmail = pick("sender_email");
+  cfg.senderName = pick("sender_name") || cfg.businessName;
+  cfg.siteUrl = pick("site_url").replace(/\/+$/, "");
+  cfg.brevoKey = pick("brevo_api_key");
+  cfg.cronSecret = pick("cron_secret");
+  loadedAt = Date.now();
+}
 
 // ------------------------------------------------------------------ HTTP
 
