@@ -88,7 +88,10 @@
   // ---------- Dados de demonstração
   const demo = {
     services: [
-      { id: 1, name: "Corte de cabelo", description: null, duration_minutes: 45, price_eur: 10 },
+      { id: 1, name: "Corte", description: null, duration_minutes: 60, price_eur: 8 },
+      { id: 2, name: "Barba", description: null, duration_minutes: 30, price_eur: 8 },
+      { id: 3, name: "Corte e barba", description: null, duration_minutes: 80, price_eur: 14 },
+      { id: 4, name: "Corte de um pente", description: null, duration_minutes: 20, price_eur: 5 },
     ],
     periods: [
       { key: "manha", label: "Manhã", start_time: "10:00:00", end_time: "12:00:00" },

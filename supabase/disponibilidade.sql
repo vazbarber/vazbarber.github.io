@@ -44,18 +44,24 @@ grant select on public.periods, public.availability to anon, authenticated;
 grant insert, update, delete on public.periods, public.availability to authenticated;
 grant all on public.periods, public.availability to service_role;
 
--- Vagas: agora vêm dos turnos abertos nesse dia (e não do horário semanal)
+-- Vagas: vêm dos turnos abertos nesse dia. As horas são propostas de 10 em
+-- 10 minutos, mas só se não deixarem antes/depois um intervalo mais curto do
+-- que o serviço mais curto (esse tempo ficaria perdido na agenda).
 create or replace function public.available_slots(p_day date, p_service_id int)
 returns table (slot_start timestamptz)
 language plpgsql stable security definer set search_path = public as $$
 declare
   v_duration interval;
+  v_min      interval;                                 -- duração do serviço mais curto
+  v_step     constant interval := interval '10 minutes';
   v_min_lead constant interval := interval '2 hours';  -- antecedência mínima
   v_max_days constant int      := 75;                  -- até ~2 meses e meio
   h record;
 begin
   select make_interval(mins => s.duration_minutes) into v_duration
   from services s where s.id = p_service_id and s.active;
+  select make_interval(mins => min(s.duration_minutes)) into v_min
+  from services s where s.active;
 
   if v_duration is null
      or p_day < (now() at time zone 'Europe/Lisbon')::date
@@ -63,27 +69,34 @@ begin
     return;
   end if;
 
-  -- As horas propostas seguem a duração do serviço (ex.: 45 min → 10:00, 10:45)
   for h in
-    select p.start_time as open_time, p.end_time as close_time
+    select (p_day + p.start_time) at time zone 'Europe/Lisbon' as ps,
+           (p_day + p.end_time)   at time zone 'Europe/Lisbon' as pe
     from availability a join periods p on p.key = a.period
     where a.day = p_day
     order by p.start_time
   loop
     return query
-      select s
-      from generate_series(
-             (p_day + h.open_time)  at time zone 'Europe/Lisbon',
-             (p_day + h.close_time) at time zone 'Europe/Lisbon' - v_duration,
-             v_duration) as s
-      where s >= now() + v_min_lead
-        and not exists (
-          select 1 from bookings b
-          where b.status in ('pending','confirmed')
-            and tstzrange(b.starts_at, b.ends_at) && tstzrange(s, s + v_duration))
-        and not exists (
-          select 1 from time_off t
-          where tstzrange(t.starts_at, t.ends_at) && tstzrange(s, s + v_duration));
+      with busy as (
+        select b.starts_at as bs, b.ends_at as be from bookings b
+        where b.status in ('pending','confirmed') and b.starts_at < h.pe and b.ends_at > h.ps
+        union all
+        select t.starts_at, t.ends_at from time_off t
+        where t.starts_at < h.pe and t.ends_at > h.ps
+      ),
+      cand as (
+        select c as s,
+               -- tempo livre antes (desde o início do turno ou fim da marcação anterior)
+               c - greatest(h.ps, coalesce((select max(be) from busy where be <= c), h.ps)) as gap_before,
+               -- tempo livre depois (até ao fim do turno ou início da marcação seguinte)
+               least(h.pe, coalesce((select min(bs) from busy where bs >= c + v_duration), h.pe)) - (c + v_duration) as gap_after
+        from generate_series(h.ps, h.pe - v_duration, v_step) as c
+        where c >= now() + v_min_lead
+          and not exists (select 1 from busy where tstzrange(bs, be) && tstzrange(c, c + v_duration))
+      )
+      select cand.s from cand
+      where (gap_before = interval '0' or gap_before >= v_min)
+        and (gap_after  = interval '0' or gap_after  >= v_min);
   end loop;
 end;
 $$;

@@ -193,7 +193,12 @@ grant execute on all functions in schema public to service_role;
 --  Supabase → Table Editor)
 -- =====================================================================
 insert into public.services (name, description, duration_minutes, price_eur, sort_order)
-select 'Corte de cabelo', null, 45, 10.00, 1
+select * from (values
+  ('Corte',             null::text, 60, 8.00,  1),
+  ('Barba',             null,       30, 8.00,  2),
+  ('Corte e barba',     null,       80, 14.00, 3),
+  ('Corte de um pente', null,       20, 5.00,  4)
+) v(name, description, duration_minutes, price_eur, sort_order)
 where not exists (select 1 from public.services);
 
 -- Todos os dias: 10:00–12:00 e 14:00–16:00

@@ -81,7 +81,7 @@ No **SQL Editor**, cola `supabase/cron.sql`, troca `O-TEU-PROJETO` e carrega em 
 1. Em `config.js`, preenche `SUPABASE_URL` e `SUPABASE_ANON_KEY` (zona e Instagram já estão preenchidos). (A chave *anon* é pública por natureza: a segurança está nas regras da base de dados.)
 2. Cria um repositório no GitHub e envia todos os ficheiros.
 3. **Settings → Pages → Build and deployment**: *Deploy from a branch*, branch `main`, pasta `/ (root)`.
-4. Passado um minuto, o site está em `https://O-TEU-UTILIZADOR.github.io/NOME-DO-REPO/` e a agenda em `.../admin.html`.
+4. Passado um minuto, o site está em `https://vazbarber.github.io/` e a agenda em `.../admin.html`.
 5. No Supabase, **Authentication → URL Configuration**: põe esse endereço em **Site URL** e acrescenta `.../admin.html` em **Redirect URLs** (para o "esqueci-me da palavra-passe" funcionar).
 
 ### 6. Manter o Supabase acordado (recomendado)
