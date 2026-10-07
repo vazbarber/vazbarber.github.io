@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Marcações</title>
+  <meta name="description" content="Marca o teu corte de cabelo online.">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="icon" href="assets/favicon.png">
+  <link rel="apple-touch-icon" href="assets/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <div class="pole" aria-hidden="true"></div>
+
+  <main class="wrap">
+    <header class="intro">
+      <img class="logo" src="assets/logo.png" width="400" height="400" alt="Vaz Barber" data-bind-alt="BUSINESS_NAME">
+      <p class="lead" id="lead">Marca o teu corte.</p>
+    </header>
+
+    <p class="demo-banner" id="demo-banner" hidden>
+      Modo demonstração: os dados são de exemplo e nada é guardado.
+    </p>
+
+    <form id="booking-form" novalidate>
+      <!-- Só aparece quando há mais do que um serviço -->
+      <section class="step" id="step-service" hidden>
+        <h2 class="step-title"><span class="step-n"></span>Serviço</h2>
+        <div class="choices" id="services" role="radiogroup" aria-label="Serviços"></div>
+      </section>
+
+      <section class="step" id="step-day" data-locked>
+        <h2 class="step-title"><span class="step-n"></span>Dia</h2>
+        <div class="day-strip-wrap">
+          <button type="button" class="strip-nav" data-dir="-1" aria-label="Dias anteriores">‹</button>
+          <ol class="day-strip" id="days" role="radiogroup" aria-label="Dias"></ol>
+          <button type="button" class="strip-nav" data-dir="1" aria-label="Dias seguintes">›</button>
+        </div>
+      </section>
+
+      <section class="step" id="step-time" data-locked>
+        <h2 class="step-title"><span class="step-n"></span>Hora</h2>
+        <div id="times" role="radiogroup" aria-label="Horas disponíveis"></div>
+      </section>
+
+      <section class="step" id="step-details" data-locked>
+        <h2 class="step-title"><span class="step-n"></span>Os teus dados</h2>
+        <div class="fields">
+          <label class="field">
+            <span>Nome</span>
+            <input name="name" autocomplete="name" required maxlength="100">
+          </label>
+          <label class="field">
+            <span>Telemóvel</span>
+            <input name="phone" type="tel" autocomplete="tel" inputmode="tel" required placeholder="912 345 678">
+          </label>
+          <label class="field">
+            <span>Email</span>
+            <input name="email" type="email" autocomplete="email" required placeholder="Para receberes a confirmação">
+          </label>
+          <label class="field">
+            <span>Nota <em>(opcional)</em></span>
+            <textarea name="notes" rows="2" maxlength="500"></textarea>
+          </label>
+          <!-- anti-spam: invisível para pessoas -->
+          <label class="hp" aria-hidden="true">Website <input name="website" tabindex="-1" autocomplete="off"></label>
+        </div>
+
+        <div class="summary" id="summary" aria-live="polite"></div>
+        <p class="form-error" id="form-error" role="alert" hidden></p>
+        <button class="btn-primary" type="submit" id="submit">Pedir marcação</button>
+        <p class="fineprint">Recebes um email quando a marcação for confirmada, com a morada, e um lembrete na véspera.</p>
+      </section>
+    </form>
+
+    <section class="done" id="done" hidden tabindex="-1">
+      <h2>Pedido enviado</h2>
+      <p id="done-text"></p>
+      <p class="muted">Se não encontrares o email, espreita a pasta de spam.</p>
+      <button type="button" class="btn-ghost" id="again">Fazer outra marcação</button>
+    </section>
+
+    <footer class="info">
+      <div>
+        <h3>Horário</h3>
+        <ul class="hours" id="hours"><li>A carregar…</li></ul>
+      </div>
+      <div>
+        <h3>Onde</h3>
+        <p data-bind="AREA"></p>
+      </div>
+      <div>
+        <h3>Contacto</h3>
+        <p><a data-bind-phone></a></p>
+        <p data-show-if="INSTAGRAM"><a data-bind-insta target="_blank" rel="noopener"></a></p>
+      </div>
+    </footer>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="assets/shared.js"></script>
+  <script src="assets/booking.js"></script>
+</body>
+</html>

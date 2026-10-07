@@ -1,0 +1,14 @@
+# As funções verificam elas próprias quem está a chamar:
+#  - book: público (qualquer cliente pode pedir marcação)
+#  - manage-booking: confirma o login e a tabela admins
+#  - send-reminders: exige o segredo CRON_SECRET
+project_id = "marcacoes"
+
+[functions.book]
+verify_jwt = false
+
+[functions.manage-booking]
+verify_jwt = false
+
+[functions.send-reminders]
+verify_jwt = false
